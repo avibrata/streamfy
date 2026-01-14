@@ -9,16 +9,20 @@ const puppeteer = require('puppeteer');
 async function scrapeMatches() {
     console.log("🕷️ Starting Scraper...");
 
-    // Launch options optimized for production (Railway limits)
+    // Launch options optimized for free tier (Render 512MB RAM limit)
     const browser = await puppeteer.launch({
         headless: "new",
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
+            '--disable-dev-shm-usage', // crucial for docker
             '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process', // <- saves memory
             '--disable-gpu'
-        ]
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
     });
 
     const matches = [];
