@@ -123,12 +123,23 @@ window.triggerScraper = async () => {
 
     // REPLACE WITH YOUR ACTUAL RENDER BACKEND URL
     // e.g., https://streamfy-backend.onrender.com/api/scrape
-    // For now, we prompt the user or hardcode it if known. 
-    const backendUrl = prompt("Enter your Render Backend URL (without /api/scrape):", "https://streamfy-zhv1.onrender.com");
+    // For now, prompt the user.
+    let backendUrl = prompt("Enter your Render Backend URL (e.g. https://streamfy.onrender.com):", "https://streamfy-zhv1.onrender.com");
     if (!backendUrl) return;
+
+    // Remove any trailing slash and /api/scrape to ensure clean path
+    backendUrl = backendUrl.replace(/\/$/, "").replace(/\/api\/scrape\/?$/, "");
 
     try {
         const res = await fetch(`${backendUrl}/api/scrape`, { method: 'POST' });
+
+        if (!res.ok) {
+            // If response is not 200 OK (e.g. 404, 500), try to read text to show user error
+            const textHTML = await res.text();
+            // Create a small snippet to alert
+            throw new Error(`Server returned ${res.status}. Check URL or Server Logs.`);
+        }
+
         const data = await res.json();
         alert(`Scraper Success! Matches found: ${data.count}`);
         loadAdminMatches();
