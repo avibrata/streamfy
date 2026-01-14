@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFY - Live Sports Streaming</title>
+    <meta name="description" content="Watch live football and cricket matches with StreamFY.">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Stream<span>FY</span></div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#football">Football</a>
+            <a href="#cricket">Cricket</a>
+        </div>
+    </nav>
+
+    <!-- Football Section -->
+    <div id="football">
+        <div class="section-title">
+            Football Matches
+        </div>
+        <div class="matches-grid" id="football-matches">
+            <!-- Matches will be loaded here -->
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <!-- Cricket Section -->
+    <div id="cricket">
+        <div class="section-title">
+            Cricket Matches
+        </div>
+        <div class="matches-grid" id="cricket-matches">
+            <!-- Matches will be loaded here -->
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
