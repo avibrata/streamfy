@@ -63,6 +63,7 @@ async function runScraperAndUpdateDB() {
         console.log("🔥 Firestore successfully updated with new match data.");
     } catch (error) {
         console.error("❌ Firestore Batch Write Error:", error);
+        throw new Error("Database Write Failed: " + error.message);
     }
 
     return matches;

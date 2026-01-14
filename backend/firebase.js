@@ -23,6 +23,7 @@ try {
   });
 
   console.log("🔥 Firebase Admin Initialized Successfully");
+  console.log("🆔 Connected to Project:", serviceAccount.project_id); // Log the Project ID
 } catch (error) {
   console.error("❌ Firebase Admin Initialization Failed:", error.message);
   // We don't exit process here strictly, but DB ops will fail.
