@@ -1,17 +1,12 @@
 const puppeteer = require('puppeteer-core');
 
-/**
- * Scrapes sports matches from a target source (BBC Sport)
- * Falls back to Realistic Mock Data if scraping fails.
- * 
- * @returns {Promise<Array>} Array of match objects
- */
 async function scrapeMatches() {
     console.log("🕷️ Starting Scraper...");
 
     // Launch options optimized for free tier (Render 512MB RAM limit)
     const browser = await puppeteer.launch({
         headless: "new",
+        ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -20,9 +15,13 @@ async function scrapeMatches() {
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--mute-audio'
         ],
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+        timeout: 60000 // Increase launch timeout
     });
 
     const matches = [];
@@ -33,7 +32,7 @@ async function scrapeMatches() {
         // Block unnecessary resources to save bandwidth/time
         await page.setRequestInterception(true);
         page.on('request', (req) => {
-            if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
+            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
                 req.abort();
             } else {
                 req.continue();
@@ -43,12 +42,10 @@ async function scrapeMatches() {
         // 1. ATTEMPT REAL SCRAPING (BBC Football)
         console.log("🔍 Navigating to BBC Sport...");
         try {
-            await page.goto('https://www.bbc.com/sport/football/scores-fixtures', { waitUntil: 'domcontentloaded', timeout: 20000 }); // 20s timeout
+            await page.goto('https://www.bbc.com/sport/football/scores-fixtures', { waitUntil: 'domcontentloaded', timeout: 30000 }); // 30s timeout
 
             const scrapedGames = await page.evaluate(() => {
                 const games = [];
-                // BBC uses article tags for fixtures usually, but classes are hashed/dynamic often.
-                // Strategy: Find text that looks like times (e.g. 15:00) and team names nearby.
                 // Simplified Selector Strategy for Demo:
                 const articles = document.querySelectorAll('article');
 
