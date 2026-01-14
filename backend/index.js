@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const cron = require('node-cron');
 const { db } = require('./firebase');
 const { scrapeMatches } = require('./scraper');
@@ -6,6 +7,7 @@ const { scrapeMatches } = require('./scraper');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors()); // Enable All CORS Requests
 app.use(express.json());
 
 // Health check endpoint
