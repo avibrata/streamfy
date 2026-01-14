@@ -1,20 +1,20 @@
 {
-  "name": "streamfy-backend",
-  "version": "1.0.0",
-  "description": "Backend scraping service for StreamFY",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
-  "dependencies": {
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "firebase-admin": "^11.11.1",
-    "node-cron": "^3.0.3",
-    "puppeteer": "^21.5.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+    "name": "streamfy-backend",
+    "version": "1.0.0",
+    "description": "Backend scraping service for StreamFY",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "firebase-admin": "^11.11.1",
+        "node-cron": "^3.0.3",
+        "puppeteer-core": "^21.5.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
 }
