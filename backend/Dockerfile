@@ -4,11 +4,13 @@ USER root
 
 WORKDIR /app
 
-COPY package.json ./
+# Copy package.json from the backend folder
+COPY backend/package.json ./
 
 RUN npm install
 
-COPY . .
+# Copy the rest of the backend folder
+COPY backend/ .
 
 # Set Puppeteer to use the installed chrome
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
