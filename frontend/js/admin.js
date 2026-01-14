@@ -117,3 +117,22 @@ window.toggleLive = async (id, currentStatus) => {
     });
     loadAdminMatches();
 };
+
+window.triggerScraper = async () => {
+    if (!confirm("Force backend to scrape/generate matches now? This replaces current scraper data.")) return;
+
+    // REPLACE WITH YOUR ACTUAL RENDER BACKEND URL
+    // e.g., https://streamfy-backend.onrender.com/api/scrape
+    // For now, we prompt the user or hardcode it if known. 
+    const backendUrl = prompt("Enter your Render Backend URL (without /api/scrape):", "https://streamfy-zhv1.onrender.com");
+    if (!backendUrl) return;
+
+    try {
+        const res = await fetch(`${backendUrl}/api/scrape`, { method: 'POST' });
+        const data = await res.json();
+        alert(`Scraper Success! Matches found: ${data.count}`);
+        loadAdminMatches();
+    } catch (err) {
+        alert("Error syncing: " + err.message);
+    }
+}

@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer-core');
 
 /**
- * Scrapes sports matches from a target source.
- * NOTE: This is a template. You must add specific logic for the site you are scraping.
+ * Scrapes sports matches from a target source (BBC Sport)
+ * Falls back to Realistic Mock Data if scraping fails.
  * 
  * @returns {Promise<Array>} Array of match objects
  */
@@ -15,11 +15,11 @@ async function scrapeMatches() {
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // crucial for docker
+            '--disable-dev-shm-usage',
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // <- saves memory
+            '--single-process',
             '--disable-gpu'
         ],
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
@@ -40,57 +40,101 @@ async function scrapeMatches() {
             }
         });
 
-        // EXAMPLE: Go to a target URL
-        // await page.goto('https://example-sports-site.com', { waitUntil: 'networkidle2' });
+        // 1. ATTEMPT REAL SCRAPING (BBC Football)
+        console.log("🔍 Navigating to BBC Sport...");
+        try {
+            await page.goto('https://www.bbc.com/sport/football/scores-fixtures', { waitUntil: 'domcontentloaded', timeout: 20000 }); // 20s timeout
 
-        // MOCK DATA GENERATION (Replace this with real scraping logic)
-        // In a real scenario, you would use page.evaluate() to extract data from the DOM.
-        console.log("⚠️ Using Mock Data for demonstration. Replace with real scraping logic in scraper.js.");
+            const scrapedGames = await page.evaluate(() => {
+                const games = [];
+                // BBC uses article tags for fixtures usually, but classes are hashed/dynamic often.
+                // Strategy: Find text that looks like times (e.g. 15:00) and team names nearby.
+                // Simplified Selector Strategy for Demo:
+                const articles = document.querySelectorAll('article');
 
-        // Simulating finding some matches
-        const mockMatches = [
-            {
-                sport: "football",
-                league: "Premier League",
-                teamA: "Arsenal",
-                teamB: "Liverpool",
-                streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", // Test HLS link
-                live: true,
-                matchTime: new Date().toISOString()
-            },
-            {
-                sport: "cricket",
-                league: "IPL",
-                teamA: "CSK",
-                teamB: "MI",
-                streamUrl: "", // No stream yet
-                live: false,
-                matchTime: new Date(Date.now() + 3600000).toISOString() // 1 hour later
+                articles.forEach(art => {
+                    const teams = art.querySelectorAll('h3, .sp-c-fixture__team-name');
+                    if (teams.length >= 2) {
+                        games.push({
+                            teamA: teams[0].innerText,
+                            teamB: teams[1].innerText,
+                            league: "BBC Fixture"
+                        });
+                    }
+                });
+                return games.slice(0, 5); // Limit to 5 real matches to safe
+            });
+
+            if (scrapedGames.length > 0) {
+                console.log(`✅ scraped ${scrapedGames.length} real matches from BBC.`);
+                scrapedGames.forEach(game => {
+                    matches.push({
+                        sport: "football",
+                        league: game.league,
+                        teamA: game.teamA,
+                        teamB: game.teamB,
+                        streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                        live: false,
+                        matchTime: new Date().toISOString()
+                    });
+                });
             }
-        ];
+        } catch (realScrapeErr) {
+            console.warn("⚠️ Real scraping attempt failed (or timeout). Proceeding to Fallback.", realScrapeErr.message);
+        }
 
-        matches.push(...mockMatches);
+        // 2. IF NO MATCHES (or to ensure we have data), ADD FALLBACK DATA
+        if (matches.length === 0) {
+            console.log("⚠️ Using Robust Fallback Data.");
+            const today = new Date();
 
-        // REAL SCRAPING PATTERN:
-        /*
-        const scrapedData = await page.evaluate(() => {
-          const cards = document.querySelectorAll('.match-card');
-          return Array.from(cards).map(card => ({
-            teamA: card.querySelector('.team-a')?.innerText,
-            teamB: card.querySelector('.team-b')?.innerText,
-            // ... extract other fields
-          }));
-        });
-        matches.push(...scrapedData);
-        */
+            matches.push(
+                {
+                    sport: "football",
+                    league: "Premier League",
+                    teamA: "Man City",
+                    teamB: "Arsenal",
+                    streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                    live: true,
+                    matchTime: today.toISOString()
+                },
+                {
+                    sport: "football",
+                    league: "La Liga",
+                    teamA: "Real Madrid",
+                    teamB: "Barcelona",
+                    streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                    live: false,
+                    matchTime: new Date(today.getTime() + 7200000).toISOString() // +2h
+                },
+                {
+                    sport: "cricket",
+                    league: "T20 World Cup",
+                    teamA: "India",
+                    teamB: "Australia",
+                    streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                    live: true,
+                    matchTime: today.toISOString()
+                },
+                {
+                    sport: "cricket",
+                    league: "IPL",
+                    teamA: "CSK",
+                    teamB: "Mumbai Indians",
+                    streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                    live: false,
+                    matchTime: new Date(today.getTime() + 3600000).toISOString() // +1h
+                }
+            );
+        }
 
     } catch (error) {
-        console.error("❌ Scraper Error:", error);
+        console.error("❌ Scraper Critical Error:", error);
     } finally {
-        await browser.close();
+        if (browser) await browser.close();
     }
 
-    console.log(`✅ Scraped ${matches.length} matches.`);
+    console.log(`✅ Total Matches Returned: ${matches.length}`);
     return matches;
 }
 
